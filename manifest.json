@@ -1,0 +1,19 @@
+[
+  {
+    "guid": "f9ee3ece-7b7e-4577-823c-4d75a0db6af5",
+    "name": "FinLibrary",
+    "description": "Starter manifest entry for FinLibrary.",
+    "overview": "Fin library helper plugin for Jellyfin.",
+    "owner": "Sleepmode",
+    "category": "General",
+    "versions": [
+      {
+        "version": "0.1.0.0",
+        "changelog": "Initial release.",
+        "targetAbi": "10.9.0.0",
+        "sourceUrl": "https://github.com/Sleepmode/FinLibrary-Plugin/releases/download/v0.1.0.0/FinLibrary_0.1.0.0.zip",
+        "checksum": "REPLACE_WITH_SHA256"
+      }
+    ]
+  }
+]
