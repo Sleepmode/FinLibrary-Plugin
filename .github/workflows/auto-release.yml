@@ -1,0 +1,115 @@
+name: Auto Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Compute version with rollover at 20
+        id: ver
+        shell: bash
+        run: |
+          BASE_MAJOR=0
+          BASE_MINOR=1
+
+          git fetch --tags
+          LATEST=$(git tag -l "v${BASE_MAJOR}.${BASE_MINOR}.*.*" | sort -V | tail -n1)
+
+          if [ -z "$LATEST" ]; then
+            PATCH=0
+            BUILD=0
+          else
+            VER=${LATEST#v}
+            PATCH=$(echo "$VER" | cut -d. -f3)
+            BUILD=$(echo "$VER" | cut -d. -f4)
+
+            if [ "$BUILD" -ge 19 ]; then
+              PATCH=$((PATCH + 1))
+              BUILD=0
+            else
+              BUILD=$((BUILD + 1))
+            fi
+          fi
+
+          VERSION="${BASE_MAJOR}.${BASE_MINOR}.${PATCH}.${BUILD}"
+          TAG="v${VERSION}"
+          ZIP="FinLibrary_${VERSION}.zip"
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "zip=${ZIP}" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: |
+          dotnet restore ./FinLibrary/FinLibrary.csproj
+          dotnet build ./FinLibrary/FinLibrary.csproj -c Release --no-restore
+
+      - name: Create zip from net9.0 contents
+        shell: bash
+        run: |
+          cd FinLibrary/bin/Release/net9.0
+          zip -r "$GITHUB_WORKSPACE/${{ steps.ver.outputs.zip }}" .
+
+      - name: Compute checksum
+        id: sha
+        shell: bash
+        run: |
+          SHA=$(sha256sum "$GITHUB_WORKSPACE/${{ steps.ver.outputs.zip }}" | awk '{print $1}')
+          echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Update manifest.json
+        shell: bash
+        run: |
+          URL="https://github.com/${{ github.repository }}/releases/download/${{ steps.ver.outputs.tag }}/${{ steps.ver.outputs.zip }}"
+          jq \
+            --arg v "${{ steps.ver.outputs.version }}" \
+            --arg url "$URL" \
+            --arg sum "${{ steps.sha.outputs.sha }}" \
+            '.[0].versions[0].version = $v
+             | .[0].versions[0].sourceUrl = $url
+             | .[0].versions[0].checksum = $sum' \
+            manifest.json > manifest.tmp
+          mv manifest.tmp manifest.json
+
+      - name: Commit manifest update
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git commit -m "chore(release): ${{ steps.ver.outputs.version }}" || echo "No changes"
+          git push
+
+      - name: Create and push tag
+        shell: bash
+        run: |
+          git tag "${{ steps.ver.outputs.tag }}"
+          git push origin "${{ steps.ver.outputs.tag }}"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: ${{ steps.ver.outputs.tag }}
+          files: ${{ steps.ver.outputs.zip }}
+          generate_release_notes: true
