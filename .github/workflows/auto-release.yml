@@ -6,13 +6,18 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  BASE_MAJOR: 0
+  BASE_MINOR: 1
+  TARGET_ABI: 10.11.0.0
+
 permissions:
   contents: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
+    if: ${{ github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'chore(release):') }}
 
     steps:
       - name: Checkout
@@ -29,9 +34,6 @@ jobs:
         id: ver
         shell: bash
         run: |
-          BASE_MAJOR=0
-          BASE_MINOR=1
-
           git fetch --tags
           LATEST=$(git tag -l "v${BASE_MAJOR}.${BASE_MINOR}.*.*" | sort -V | tail -n1)
 
@@ -64,10 +66,21 @@ jobs:
           dotnet restore ./FinLibrary/FinLibrary.csproj
           dotnet build ./FinLibrary/FinLibrary.csproj -c Release --no-restore
 
-      - name: Create zip from net9.0 contents
+      - name: Locate build output folder
+        id: out
         shell: bash
         run: |
-          cd FinLibrary/bin/Release/net9.0
+          OUT_DIR=$(find "$GITHUB_WORKSPACE/FinLibrary/bin/Release" -mindepth 1 -maxdepth 1 -type d | head -n1)
+          if [ -z "$OUT_DIR" ]; then
+            echo "Could not find build output directory under FinLibrary/bin/Release"
+            exit 1
+          fi
+          echo "dir=$OUT_DIR" >> "$GITHUB_OUTPUT"
+
+      - name: Create zip from build output contents
+        shell: bash
+        run: |
+          cd "${{ steps.out.outputs.dir }}"
           zip -r "$GITHUB_WORKSPACE/${{ steps.ver.outputs.zip }}" .
 
       - name: Compute checksum
@@ -85,9 +98,11 @@ jobs:
             --arg v "${{ steps.ver.outputs.version }}" \
             --arg url "$URL" \
             --arg sum "${{ steps.sha.outputs.sha }}" \
+            --arg abi "$TARGET_ABI" \
             '.[0].versions[0].version = $v
              | .[0].versions[0].sourceUrl = $url
-             | .[0].versions[0].checksum = $sum' \
+             | .[0].versions[0].checksum = $sum
+             | .[0].versions[0].targetAbi = $abi' \
             manifest.json > manifest.tmp
           mv manifest.tmp manifest.json
 
