@@ -1,6 +1,6 @@
 using MediaBrowser.Model.Plugins;
 
-namespace Jellyfin.Plugin.Template.Configuration;
+namespace FinLibrary.Configuration;
 
 /// <summary>
 /// The configuration options.
