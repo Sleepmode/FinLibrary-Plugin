@@ -8,11 +8,11 @@
     "category": "General",
     "versions": [
       {
-        "version": "0.1.0.1",
+        "version": "0.1.0.2",
         "changelog": "Initial release.",
         "targetAbi": "10.9.0.0",
-        "sourceUrl": "https://github.com/Sleepmode/FinLibrary-Plugin/releases/download/v0.1.0.1/FinLibrary_0.1.0.1.zip",
-        "checksum": "f4b882bb83286a9c8e002a5addf34615c3db9ce4563b2673c4a76a1b2cac91dd"
+        "sourceUrl": "https://github.com/Sleepmode/FinLibrary-Plugin/releases/download/v0.1.0.2/FinLibrary_0.1.0.2.zip",
+        "checksum": "1ba357c73b411eba80e04994e2d57083cbfaf756c87e08964c44e64dec413c95"
       }
     ]
   }
