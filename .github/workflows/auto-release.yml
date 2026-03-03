@@ -30,6 +30,16 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
+      - name: Capture changelog message
+        id: cl
+        shell: bash
+        run: |
+          MSG=$(git log -1 --pretty=%s | tr -d '\r')
+          if [ -z "$MSG" ]; then
+            MSG="Automated release"
+          fi
+          echo "msg=$MSG" >> "$GITHUB_OUTPUT"
+
       - name: Compute version with rollover at 20
         id: ver
         shell: bash
@@ -64,7 +74,11 @@ jobs:
       - name: Build
         run: |
           dotnet restore ./FinLibrary/FinLibrary.csproj
-          dotnet build ./FinLibrary/FinLibrary.csproj -c Release --no-restore
+          dotnet build ./FinLibrary/FinLibrary.csproj -c Release --no-restore \
+            -p:Version=${{ steps.ver.outputs.version }} \
+            -p:AssemblyVersion=${{ steps.ver.outputs.version }} \
+            -p:FileVersion=${{ steps.ver.outputs.version }} \
+            -p:InformationalVersion=${{ steps.ver.outputs.version }}
 
       - name: Locate build output folder
         id: out
@@ -99,7 +113,9 @@ jobs:
             --arg url "$URL" \
             --arg sum "${{ steps.sha.outputs.sha }}" \
             --arg abi "$TARGET_ABI" \
+            --arg cl "${{ steps.cl.outputs.msg }}" \
             '.[0].versions[0].version = $v
+             | .[0].versions[0].changelog = $cl
              | .[0].versions[0].sourceUrl = $url
              | .[0].versions[0].checksum = $sum
              | .[0].versions[0].targetAbi = $abi' \

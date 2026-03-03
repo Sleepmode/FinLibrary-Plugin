@@ -31,6 +31,7 @@ public class PluginConfiguration : BasePluginConfiguration
         // set default options here
         Options = SomeOptions.AnotherOption;
         TrueFalseSetting = true;
+        DebugMode = false;
         AnInteger = 2;
         AString = "string";
     }
@@ -39,6 +40,11 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Gets or sets a value indicating whether some true or false setting is enabled..
     /// </summary>
     public bool TrueFalseSetting { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether debug mode is enabled.
+    /// </summary>
+    public bool DebugMode { get; set; }
 
     /// <summary>
     /// Gets or sets an integer setting.
