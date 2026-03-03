@@ -8,11 +8,11 @@
     "category": "General",
     "versions": [
       {
-        "version": "0.1.0.2",
-        "changelog": "Initial release.",
+        "version": "0.1.0.3",
+        "changelog": "Merge branch 'main' of https://github.com/Sleepmode/FinLibrary-Plugin",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/Sleepmode/FinLibrary-Plugin/releases/download/v0.1.0.2/FinLibrary_0.1.0.2.zip",
-        "checksum": "5e165e8b038db70bbadd1c971bd2544b"
+        "sourceUrl": "https://github.com/Sleepmode/FinLibrary-Plugin/releases/download/v0.1.0.3/FinLibrary_0.1.0.3.zip",
+        "checksum": "e67aa907621fc89358c6646aeb346cca"
       }
     ]
   }
