@@ -87,7 +87,7 @@ jobs:
         id: sha
         shell: bash
         run: |
-          SHA=$(sha256sum "$GITHUB_WORKSPACE/${{ steps.ver.outputs.zip }}" | awk '{print $1}')
+          SHA=$(md5sum "$GITHUB_WORKSPACE/${{ steps.ver.outputs.zip }}" | awk '{print $1}')
           echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Update manifest.json
